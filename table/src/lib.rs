@@ -46,12 +46,14 @@ impl TableService {
     }
 }
 
+#[derive(Deserialize, Serialize)]
 pub struct CreateTableBody {
     pub id: String,
     pub size_y: u8,
     pub size_x: u8,
 }
 
+#[derive(Deserialize, Serialize)]
 pub struct ChangeTableDTO {
     pub id: String,
     pub x: u8,
