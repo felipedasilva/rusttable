@@ -1,6 +1,8 @@
 use std::sync::Mutex;
 
-use actix_web::{get, post, put, web, App, HttpResponse, HttpServer, Result};
+use actix_web::middleware::Logger;
+use actix_web::{get, post, put, web, App, HttpResponse, HttpServer};
+use env_logger::Env;
 
 use table::{ChangeTableDTO, CreateTableDTO, TableService};
 
@@ -9,13 +11,10 @@ struct AppState {
 }
 
 #[post("/table")]
-async fn create_table(
-    data: web::Data<AppState>,
-    body: web::Json<CreateTableDTO>,
-) -> Result<HttpResponse> {
+async fn create_table(data: web::Data<AppState>, body: web::Json<CreateTableDTO>) -> HttpResponse {
     let mut table_service = data.table_service.lock().unwrap();
     let table = table_service.create_table(body.into_inner()).unwrap();
-    Ok(HttpResponse::Ok().json(table))
+    HttpResponse::Ok().json(table)
 }
 
 #[get("/table/{table_id}")]
@@ -36,20 +35,25 @@ async fn change_table(data: web::Data<AppState>, body: web::Json<ChangeTableDTO>
     match table_service.change_table(body.into_inner()) {
         Ok(table) => {
             println!("{:?}", table);
-            return HttpResponse::Ok().json(true)
-        },
+            return HttpResponse::Ok().json(true);
+        }
         Err(_) => HttpResponse::BadRequest().body("I wasn't possible change the table"),
     }
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
     HttpServer::new(|| {
         App::new()
             .data(AppState {
                 table_service: Mutex::new(TableService::new()),
             })
+            .wrap(Logger::default())
+            .wrap(Logger::new("%a %{User-Agent}i"))
+            .service(get_table)
             .service(create_table)
+            .service(change_table)
     })
     .bind("127.0.0.1:8080")?
     .run()
@@ -123,6 +127,7 @@ mod tests {
                 .service(get_table),
         )
         .await;
+
         let req = test::TestRequest::get().uri("/table/test").to_request();
         let result = test::read_response(&mut app, req).await;
         assert_eq!(
@@ -199,9 +204,6 @@ mod tests {
             .set_json(&body)
             .to_request();
         let result = test::read_response(&mut app, req).await;
-        assert_eq!(
-            result,
-            Bytes::from_static(b"true")
-        );
+        assert_eq!(result, Bytes::from_static(b"true"));
     }
 }

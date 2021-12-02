@@ -27,6 +27,7 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug executable 'server'",
+            
             "cargo": {
                 "args": [
                     "build",
