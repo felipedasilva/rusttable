@@ -15,7 +15,7 @@ impl TableService {
         }
     }
 
-    pub fn create_table(&mut self, dto: CreateTableBody) -> Result<&Table, ()> {
+    pub fn create_table(&mut self, dto: CreateTableDTO) -> Result<&Table, ()> {
         self.tables.insert(
             dto.id.clone(),
             Table::new(dto.id.clone(), dto.size_y, dto.size_x),
@@ -47,7 +47,7 @@ impl TableService {
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct CreateTableBody {
+pub struct CreateTableDTO {
     pub id: String,
     pub size_y: u8,
     pub size_x: u8,
@@ -67,7 +67,7 @@ mod tests {
 
     #[test]
     fn test_create_table() {
-        let dto = CreateTableBody {
+        let dto = CreateTableDTO {
             id: String::from("test"),
             size_y: 1,
             size_x: 1,
@@ -81,7 +81,7 @@ mod tests {
 
     #[test]
     fn test_get_table() {
-        let dto = CreateTableBody {
+        let dto = CreateTableDTO {
             id: String::from("test"),
             size_y: 1,
             size_x: 1,
@@ -96,7 +96,7 @@ mod tests {
 
     #[test]
     fn test_get_mut_table() {
-        let dto = CreateTableBody {
+        let dto = CreateTableDTO {
             id: String::from("test"),
             size_y: 1,
             size_x: 1,
@@ -111,7 +111,7 @@ mod tests {
 
     #[test]
     fn test_change_table_error_when_not_found_table() {
-        let dto = CreateTableBody {
+        let dto = CreateTableDTO {
             id: String::from("test"),
             size_y: 1,
             size_x: 1,
@@ -129,7 +129,7 @@ mod tests {
 
     #[test]
     fn test_change_table_error_when_x_out_of_range() {
-        let dto = CreateTableBody {
+        let dto = CreateTableDTO {
             id: String::from("test"),
             size_y: 0,
             size_x: 1,
@@ -147,7 +147,7 @@ mod tests {
 
     #[test]
     fn test_change_table_error_when_y_out_of_range() {
-        let dto = CreateTableBody {
+        let dto = CreateTableDTO {
             id: String::from("test"),
             size_y: 0,
             size_x: 1,
@@ -165,7 +165,7 @@ mod tests {
 
     #[test]
     fn test_change_table() {
-        let dto = CreateTableBody {
+        let dto = CreateTableDTO {
             id: String::from("test"),
             size_y: 1,
             size_x: 1,
