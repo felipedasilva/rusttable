@@ -1,5 +1,5 @@
 Simple rust project
 
-    test: ```cargo test```
+    test: cargo test
 
-    run: ```cargo run```
+    run: cargo run
