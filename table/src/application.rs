@@ -1,22 +1,23 @@
+use std::sync::Arc;
 use std::sync::Mutex;
 
 use actix_web::{get, post, put, web, HttpResponse};
 
-use table::service::{ChangeTableDTO, CreateTableDTO, TableService};
+use crate::service::{ChangeTableDTO, CreateTableDTO, TableService};
 
 pub struct TableAppState {
-    table_service: Mutex<TableService>,
+    pub table_service: Arc<Mutex<TableService>>,
 }
 
 impl TableAppState {
     pub fn new() -> TableAppState {
         TableAppState {
-            table_service: Mutex::new(TableService::new()),
+            table_service: Arc::new(Mutex::new(TableService::new())),
         }
     }
 }
 
-#[post("/table")]
+#[post("")]
 pub async fn create_table(
     data: web::Data<TableAppState>,
     body: web::Json<CreateTableDTO>,
@@ -26,7 +27,7 @@ pub async fn create_table(
     HttpResponse::Ok().json(table)
 }
 
-#[get("/table/{table_id}")]
+#[get("/{table_id}")]
 pub async fn get_table(
     data: web::Data<TableAppState>,
     web::Path(table_id): web::Path<String>,
@@ -38,7 +39,7 @@ pub async fn get_table(
     }
 }
 
-#[put("/table")]
+#[put("")]
 pub async fn change_table(
     data: web::Data<TableAppState>,
     body: web::Json<ChangeTableDTO>,
@@ -61,11 +62,13 @@ mod tests {
     #[actix_rt::test]
     async fn test_post_table() {
         let mut app = test::init_service(
-            App::new()
-                .data(TableAppState {
-                    table_service: Mutex::new(TableService::new()),
-                })
-                .service(create_table),
+            App::new().service(
+                web::scope("/table")
+                    .data(TableAppState {
+                        table_service: Arc::new(Mutex::new(TableService::new())),
+                    })
+                    .service(create_table),
+            ),
         )
         .await;
         let body = CreateTableDTO {
@@ -86,14 +89,16 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_get_table_error_not_found() {
-        let service = Mutex::new(TableService::new());
+        let service = Arc::new(Mutex::new(TableService::new()));
 
         let mut app = test::init_service(
-            App::new()
-                .data(TableAppState {
-                    table_service: service,
-                })
-                .service(get_table),
+            App::new().service(
+                web::scope("/table")
+                    .data(TableAppState {
+                        table_service: service.clone(),
+                    })
+                    .service(get_table),
+            ),
         )
         .await;
         let req = test::TestRequest::get().uri("/table/test").to_request();
@@ -103,7 +108,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_get_table() {
-        let service = Mutex::new(TableService::new());
+        let service = Arc::new(Mutex::new(TableService::new()));
 
         let dto = CreateTableDTO {
             id: String::from("test"),
@@ -113,11 +118,13 @@ mod tests {
         service.lock().unwrap().create_table(dto).unwrap();
 
         let mut app = test::init_service(
-            App::new()
-                .data(TableAppState {
-                    table_service: service,
-                })
-                .service(get_table),
+            App::new().service(
+                web::scope("/table")
+                    .data(TableAppState {
+                        table_service: service.clone(),
+                    })
+                    .service(get_table),
+            ),
         )
         .await;
 
@@ -131,7 +138,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_change_table_error() {
-        let service = Mutex::new(TableService::new());
+        let service = Arc::new(Mutex::new(TableService::new()));
 
         let dto = CreateTableDTO {
             id: String::from("test"),
@@ -141,11 +148,13 @@ mod tests {
         service.lock().unwrap().create_table(dto).unwrap();
 
         let mut app = test::init_service(
-            App::new()
-                .data(TableAppState {
-                    table_service: service,
-                })
-                .service(change_table),
+            App::new().service(
+                web::scope("/table")
+                    .data(TableAppState {
+                        table_service: service.clone(),
+                    })
+                    .service(change_table),
+            ),
         )
         .await;
 
@@ -168,7 +177,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_change_table() {
-        let service = Mutex::new(TableService::new());
+        let service = Arc::new(Mutex::new(TableService::new()));
 
         let dto = CreateTableDTO {
             id: String::from("test"),
@@ -178,11 +187,13 @@ mod tests {
         service.lock().unwrap().create_table(dto).unwrap();
 
         let mut app = test::init_service(
-            App::new()
-                .data(TableAppState {
-                    table_service: service,
-                })
-                .service(change_table),
+            App::new().service(
+                web::scope("/table")
+                    .data(TableAppState {
+                        table_service: service.clone(),
+                    })
+                    .service(change_table),
+            ),
         )
         .await;
 
